@@ -2,6 +2,7 @@
 #The second thread finds the smallest value un the list.
 # The results are displayed on the screan.
 
+"""
 # moje řešení:
 import threading
 import time
@@ -13,7 +14,6 @@ def num_min(a):
     print(min(a))
 def num_max(a):
     print(max(a))
-
 
 # Vytvoření dvou vláken
 thread1 = threading.Thread(target=num_min(a), args="Vlákno 1")
@@ -29,6 +29,36 @@ thread2.join()
 
 print("Hlavní vlákno skončilo.")
 
-
+"""
 
 # řešení od učitele:
+
+import threading
+
+
+def find_largest(numbers):
+    largest = max(numbers)
+    print(f"Largest value: {largest}")
+
+
+def find_smallest(numbers):
+    smallest = min(numbers)
+    print(f"Smallest value: {smallest}")
+
+
+user_values = input("Enter values separated by commas: ")
+values_list = [int(x) for x in user_values.split(',')]
+
+thread_largest = threading.Thread(target=find_largest,args=(values_list,))
+thread_smallest = threading.Thread(target=find_smallest, args=(values_list,))
+
+thread_largest.start()
+thread_smallest.start()
+
+thread_largest.join()
+thread_smallest.join()
+
+
+
+
+

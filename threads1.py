@@ -10,6 +10,7 @@ def print_numbers():
 # Vytvoření dvou vláken
 thread1 = threading.Thread(target=print_numbers, name="Vlákno 1")
 thread2 = threading.Thread(target=print_numbers, name="Vlákno 2")
+#thread2 = threading.Thread(target=print_numbers, daemon=True, name="Vlákno 2") # ukáza deamon který je ve výchozí hodnotě false. Ukončuje vlákno s koncem programu. 
 
 # Spuštění vláken
 thread1.start()

@@ -12,3 +12,4 @@ while True:
         print(f"Odpoveď zo servera: {response}")
     else:
         exit()
+

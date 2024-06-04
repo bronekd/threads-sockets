@@ -1,22 +1,31 @@
-
 import socket
+import threading
 
-def start_client():
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect(('localhost', 12347))
-
+def receive_messages(client_socket):
     while True:
-        message = input("You: ")
-        client_socket.sendall(message.encode())
-        if message.lower() == 'bye':
+        try:
+            message = client_socket.recv(1024).decode('utf-8')
+
+            print(message)
+        except:
+            print("Došlo k chybě!")
+            client_socket.close()
             break
 
-        reply = client_socket.recv(1024).decode()
-        print(f"Server: {reply}")
-        if reply.lower() == 'bye':
-            break
+def send_messages(client_socket):
+    while True:
+        message = f"{username}: {input('zadej spravu:')}"
+        client_socket.send(message.encode('utf-8'))
 
-    client_socket.close()
+if __name__ == "__main__":
+    username = input("Zadejte své uživatelské jméno: ")
+    password = input("Zadejte své heslo: ")
 
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.connect(('127.0.0.1', 5555))
 
-start_client()
+    receive_thread = threading.Thread(target=receive_messages, args=(client_socket,))
+    receive_thread.start()
+
+    send_thread = threading.Thread(target=send_messages, args=(client_socket,))
+    send_thread.start()

@@ -34,28 +34,27 @@ def receive_connections(server_socket):
         client_socket, client_address = server_socket.accept()
         print(f"Připojení od {client_address} bylo navázáno.")
 
-        usernames[client_socket] = client_address # username
-        clients.append(client_socket)
-        print(f"Uživatelské jméno klienta je {client_address}")
-        broadcast(f"{client_address} se připojil k chatu!".encode('utf-8'), client_socket)
-        client_socket.send("Připojení k serveru bylo úspěšné!".encode('utf-8'))
+        client_socket.send("USERNAME".encode('utf-8'))
+        username = client_socket.recv(1024).decode('utf-8')
 
-        thread = threading.Thread(target=handle_client, args=(client_socket,))
-        thread.start()
+        client_socket.send("PASSWORD".encode('utf-8'))
+        password = client_socket.recv(1024).decode('utf-8')
+
+        if username in db and db[username] == password:
+            usernames[client_socket] = username
+            clients.append(client_socket)
+            print(f"Uživatelské jméno klienta je {username}")
+            broadcast(f"{username} se připojil k chatu!".encode('utf-8'), client_socket)
+            client_socket.send("Připojení k serveru bylo úspěšné!".encode('utf-8'))
+
+            thread = threading.Thread(target=handle_client, args=(client_socket,))
+            thread.start()
+        else:
+            client_socket.send("Neplatné uživatelské jméno nebo heslo.".encode('utf-8'))
+            client_socket.send("CLOSE".encode('utf-8'))
+            client_socket.close()
 
 
-
-def start_server():
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(('127.0.0.1', 5555))
-    server_socket.listen()
-
-    print("Server naslouchá...")
-    receive_connections(server_socket)
-
-
-if __name__ == "__main__":
-    start_server()
 
 def start_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

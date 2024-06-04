@@ -4,7 +4,7 @@ import threading
 def autentificate(client_socket):
     try:
         username = input("Zadejte své uživatelské jméno: ")
-        password = input("Zadejte své uživatelské jméno: ")
+        password = input("Zadejte své heslo: ")
         client_socket.send(f"{username}:{password}".encode('utf-8'))
         message = client_socket.recv(1024).decode('utf-8')
         print(message)

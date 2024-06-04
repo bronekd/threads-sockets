@@ -1,32 +1,37 @@
 import socket
 import threading
 
-clients = []
-usernames = {}
-room = {}
+rooms = {}
 db = {
     "user1": "pass1",
-    "user2": "pass2"
+    "user2": "pass2",
+    "user3": "pass3",
 }
 
-def broadcast(message, client_socket):
-    for client in clients:
+
+def broadcast(message, room, client_socket):
+    """Odošle správu všetkým klientom v miestnosti okrem odosielateľa."""
+    for client in rooms[room]:
         if client != client_socket:
             try:
                 client.send(message)
             except:
                 client.close()
-                clients.remove(client)
+                rooms[room].remove(client)
+                if not rooms[room]:
+                    del rooms[room]
 
 
-def handle_client(client_socket):
+def handle_client(client_socket, room):
     while True:
         try:
             message = client_socket.recv(1024)
-            broadcast(message, client_socket)
+            broadcast(message, room, client_socket)
         except:
             client_socket.close()
-            clients.remove(client_socket)
+            rooms[room].remove(client_socket)
+            if not rooms[room]:
+                del rooms[room]
             break
 
 
@@ -35,32 +40,29 @@ def receive_connections(server_socket):
         client_socket, client_address = server_socket.accept()
         print(f"Připojení od {client_address} bylo navázáno.")
 
-        client_socket.send("USERNAME".encode('utf-8'))
-        username = client_socket.recv(1024).decode('utf-8')
-        print(f"Připojení od {username} bylo navázáno.")
-
-        client_socket.send("PASSWORD".encode('utf-8'))
-        password = client_socket.recv(1024).decode('utf-8')
-        print(f"Heslo od {username} je {password}.")
-
-        client_socket.send("ROOM".encode('utf-8'))
-        room = client_socket.recv(1024).decode('utf-8')
-        print(f"Uživatel: {username} se chce připojitk místnosti: {room}.")
-
+        username, password = client_socket.recv(1024).decode('utf-8').split(":")
 
         if username in db and db[username] == password:
-            usernames[client_socket] = username
-            clients.append(client_socket)
-            print(f"Uživatelské jméno klienta je {username}")
-            broadcast(f"{username} se připojil k chatu!".encode('utf-8'), client_socket)
             client_socket.send("Připojení k serveru bylo úspěšné!".encode('utf-8'))
 
-            thread = threading.Thread(target=handle_client, args=(client_socket,))
+            print(f"Uživatelské jméno klienta je {username}")
+            room = client_socket.recv(1024).decode('utf-8')
+            if room not in rooms:
+                rooms[room] = []
+            rooms[room].append(client_socket)
+            print(f"Klient sa pripojil do miestnosti: {room}")
+
+            broadcast(f"{username} se připojil k chatu!".encode('utf-8'),
+                      room,
+                      client_socket)
+
+            thread = threading.Thread(target=handle_client, args=(client_socket, room))
             thread.start()
         else:
             client_socket.send("Neplatné uživatelské jméno nebo heslo.".encode('utf-8'))
             client_socket.send("CLOSE".encode('utf-8'))
             client_socket.close()
+
 
 
 
